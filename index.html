@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jenter">
+<meta name="theme-color" content="#d99a1c">
+<title>Jenter planer</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #fbf6ea; --surface: #ffffff; --text: #2b2418; --muted: #7a6c52;
+    --line: #eadfc4; --accent: #d99a1c; --accent-dark: #a8720a; --accent-soft: #fdf0cf;
+    --head: #3b2f14; --head-text: #fff6df; --shadow: 0 6px 24px rgba(120,85,10,.12);
+    --s1-bg: #dff1e3; --s1-fg: #1f6b3a;
+    --s2-bg: #dcebfa; --s2-fg: #1d5a94;
+    --d-bg:  #fdeccb; --d-fg:  #9a5b00;
+    --n-bg:  #e6e1f5; --n-fg:  #4a3d8a;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1b1710; --surface: #262116; --text: #f3ead6; --muted: #b3a483;
+    --line: #3a3322; --accent: #f0b43a; --accent-dark: #f0b43a; --accent-soft: #3a2f14;
+    --head: #120f09; --head-text: #fbe9bd; --shadow: 0 6px 24px rgba(0,0,0,.4);
+    --s1-bg: #1e3a28; --s1-fg: #8fdca8; --s2-bg: #1d3450; --s2-fg: #9cc9f2;
+    --d-bg: #4a3510; --d-fg: #f5c46b; --n-bg: #2f2a50; --n-fg: #bdb2f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1b1710; --surface: #262116; --text: #f3ead6; --muted: #b3a483;
+      --line: #3a3322; --accent: #f0b43a; --accent-dark: #f0b43a; --accent-soft: #3a2f14;
+      --head: #120f09; --head-text: #fbe9bd; --shadow: 0 6px 24px rgba(0,0,0,.4);
+      --s1-bg: #1e3a28; --s1-fg: #8fdca8; --s2-bg: #1d3450; --s2-fg: #9cc9f2;
+      --d-bg: #4a3510; --d-fg: #f5c46b; --n-bg: #2f2a50; --n-fg: #bdb2f0;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.45;
+    min-height: 100vh; padding: 28px 16px 48px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  header { text-align: center; margin-bottom: 18px; position: relative; }
+  header img.logo { width: 64px; height: 64px; border-radius: 16px; box-shadow: var(--shadow); }
+  header h1 { margin: 8px 0 2px; font-size: 30px; letter-spacing: .3px; }
+  header p { margin: 0; color: var(--muted); font-size: 15px; }
+  .gear {
+    position: absolute; right: 0; top: 0;
+    width: 44px; height: 44px; border-radius: 12px;
+    border: 2px solid var(--line); background: var(--surface); font-size: 22px; line-height: 1;
+    box-shadow: var(--shadow);
+  }
+  .gear[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab {
+    flex: 1; padding: 12px 8px; border-radius: 12px; font-weight: 800; font-size: 16px;
+    border: 2px solid var(--line); background: var(--surface); color: var(--muted);
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #2b1d00; box-shadow: var(--shadow); }
+
+  .picker {
+    background: var(--surface); border: 2px solid var(--accent); border-radius: 16px;
+    padding: 16px 20px; box-shadow: var(--shadow);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px;
+    margin-bottom: 12px;
+  }
+  .picker label { font-weight: 700; font-size: 14px; letter-spacing: .4px; text-transform: uppercase; color: var(--accent-dark); }
+  input[type="date"], input[type="text"], select {
+    font: inherit; font-size: 17px; font-weight: 600; padding: 8px 12px;
+    border: 2px solid var(--line); border-radius: 10px;
+    background: var(--accent-soft); color: var(--text); outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(217,154,28,.25); }
+
+  .today {
+    text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 16px;
+  }
+  .today .badge { margin-left: 4px; }
+
+  .card {
+    background: var(--surface); border-radius: 16px; box-shadow: var(--shadow);
+    overflow: hidden; border: 1px solid var(--line);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--head); color: var(--head-text); text-align: left; font-size: 12.5px;
+    letter-spacing: .8px; text-transform: uppercase; padding: 14px 16px; font-weight: 700;
+  }
+  tbody td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+  tbody tr:hover { background: var(--accent-soft); }
+  tbody tr.is-today { outline: 3px solid var(--accent); outline-offset: -3px; background: var(--accent-soft); }
+
+  .day {
+    display: inline-block; min-width: 64px; text-align: center; background: var(--accent); color: #2b1d00;
+    font-weight: 800; border-radius: 999px; padding: 4px 12px; font-size: 14px; white-space: nowrap;
+  }
+  .date { font-weight: 700; white-space: nowrap; }
+  .date small { display: block; color: var(--muted); font-weight: 500; text-transform: lowercase; font-size: 13px; }
+  .act { font-weight: 700; }
+  .desc { color: var(--muted); }
+
+  .badge { display: inline-block; min-width: 38px; text-align: center; font-weight: 800; font-size: 14px; padding: 5px 12px; border-radius: 8px; }
+  .b-S1 { background: var(--s1-bg); color: var(--s1-fg); }
+  .b-S2 { background: var(--s2-bg); color: var(--s2-fg); }
+  .b-D  { background: var(--d-bg);  color: var(--d-fg); }
+  .b-N  { background: var(--n-bg);  color: var(--n-fg); }
+
+  /* Podešavanja */
+  .settings {
+    background: var(--surface); border: 2px solid var(--accent); border-radius: 16px;
+    box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px;
+  }
+  .settings[hidden] { display: none; }
+  .settings h2 { margin: 0 0 4px; font-size: 19px; }
+  .settings h3 { margin: 18px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--accent-dark); }
+  .settings p.hint { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field span { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .field input, .field select { width: 100%; }
+  .preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .preview div { text-align: center; font-size: 12px; color: var(--muted); }
+  .preview .badge { display: block; margin-bottom: 2px; }
+  .row-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .btn { padding: 10px 16px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); font-weight: 700; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #2b1d00; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
+  footer .credit { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-weight: 600; }
+
+  @media (max-width: 680px) {
+    body { padding: 18px 12px 36px; }
+    header h1 { font-size: 25px; }
+    header img.logo { width: 52px; height: 52px; border-radius: 13px; }
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr { padding: 14px 16px; border-bottom: 1px solid var(--line); position: relative; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { border: none; padding: 2px 0; }
+    td.c-day { margin-bottom: 6px; }
+    td.c-job { position: absolute; top: 14px; right: 16px; width: auto; }
+    td.c-date { margin-bottom: 4px; }
+    td.c-date small { display: inline; margin-left: 6px; }
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .card, .picker { box-shadow: none; }
+    .gear, .tabs, .settings { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="gear" id="gear" aria-label="Podešavanja" aria-expanded="false" aria-controls="settings">⚙️</button>
+    <img class="logo" src="icons/icon-192.png" alt="" width="64" height="64">
+    <h1>Jenter planer</h1>
+    <p>Raspored aktivnosti pri odgoju matica Jenter sistemom</p>
+  </header>
+
+  <section class="settings" id="settings" hidden>
+    <h2>Podešavanja</h2>
+
+    <h3>Nazivi jentera</h3>
+    <div class="grid" id="nameFields"></div>
+
+    <h3>Smjene</h3>
+    <p class="hint">Ako se ciklus smjena promijeni, unesite datum i koja je smjena bila tog dana, pa redoslijed kojim se smjene nastavljaju (S1, S2, D, N).</p>
+    <div class="grid">
+      <label class="field"><span>Referentni datum</span><input type="date" id="refDate"></label>
+      <label class="field"><span>Smjena na taj datum</span><select id="refShift"></select></label>
+    </div>
+    <p class="hint" style="margin-top:12px">Redoslijed nakon toga (svaki dan sljedeća):</p>
+    <div class="grid" id="orderFields"></div>
+
+    <h3>Pregled narednih 12 dana</h3>
+    <div class="preview" id="preview"></div>
+
+    <div class="row-btns">
+      <button class="btn primary" id="closeSettings">Gotovo</button>
+      <button class="btn" id="resetShifts">Vrati zadane smjene</button>
+    </div>
+  </section>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <div class="picker">
+    <label for="start">Datum ubrizgavanja matice (0. dan):</label>
+    <input type="date" id="start">
+  </div>
+  <div class="today" id="today"></div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Dan</th><th>Datum</th><th>Aktivnost</th><th>Opis postupka</th><th>Posao</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>Za svaki jenter se mijenja samo datum ubrizgavanja – ostali datumi i oznake posla računaju se automatski. Podaci se pamte na ovom uređaju.
+    <div class="credit">© 2026 Napravio Danilo. Sva prava zadržana.</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var STEPS = [
+    { n: 0,  act: "Ubrizgavanje matice",    desc: "Zatvaranje matice u Jenter kasetu." },
+    { n: 1,  act: "Puštanje matice",        desc: "Oslobađanje matice iz kasete nakon polaganja jaja." },
+    { n: 3,  act: "Priprema odgajivačkog",  desc: "Stavljanje kloukova daske." },
+    { n: 4,  act: "Presađivanje",           desc: "Prebacivanje čašica sa larvama na letvice u odgajivač." },
+    { n: 9,  act: "Zatvaranje matičnjaka",  desc: "Pčele su završile hranjenje i zatvorile matičnjake." },
+    { n: 14, act: "Formiranje oplodnjake",  desc: "Formiranje oplodnjake i nukleusa." },
+    { n: 15, act: "Presađivanje",           desc: "Postavljanje „viklera“ radi zaštite. Stavljanje u oplodnjak." },
+    { n: 16, act: "Izleganje",              desc: "Očekivani izlazak mladih matica." },
+    { n: 25, act: "Provjera pronosa",       desc: "Kontrola da li je matica oplođena i da li nosi." }
+  ];
+  var ALL_SHIFTS = ["S1", "S2", "D", "N"];
+  var WEEKDAYS = ["ned", "pon", "uto", "sri", "čet", "pet", "sub"];
+  var DAY_MS = 86400000;
+  var KEY = "jenter-planer-v2";
+  var OLD_KEY = "jenter-planer-datum";
+
+  function pad(x) { return (x < 10 ? "0" : "") + x; }
+  function todayStr() {
+    var n = new Date();
+    return n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate());
+  }
+  function parse(v) {
+    var p = v.split("-");
+    return Date.UTC(+p[0], +p[1] - 1, +p[2]);
+  }
+  function fmt(t) {
+    var d = new Date(t);
+    return pad(d.getUTCDate()) + "." + pad(d.getUTCMonth() + 1) + "." + d.getUTCFullYear() + ".";
+  }
+  function isDate(s) { return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+
+  function defaults() {
+    return {
+      active: 0,
+      jenters: [
+        { name: "Jenter-1", date: "2026-06-08" },
+        { name: "Jenter-2", date: todayStr() },
+        { name: "Jenter-3", date: todayStr() }
+      ],
+      shift: { ref: "2026-06-04", order: ["S1", "S2", "D", "N"] }
+    };
+  }
+
+  var state = defaults();
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw), d = defaults();
+        if (s && Array.isArray(s.jenters) && s.jenters.length === 3) {
+          state.jenters = s.jenters.map(function (j, i) {
+            return {
+              name: (j && typeof j.name === "string" && j.name.trim()) ? j.name.trim().slice(0, 20) : d.jenters[i].name,
+              date: (j && isDate(j.date)) ? j.date : d.jenters[i].date
+            };
+          });
+        }
+        if (s && s.shift && isDate(s.shift.ref) && Array.isArray(s.shift.order) && s.shift.order.length === 4 &&
+            s.shift.order.every(function (x) { return ALL_SHIFTS.indexOf(x) > -1; })) {
+          state.shift = { ref: s.shift.ref, order: s.shift.order.slice() };
+        }
+        if (s && s.active >= 0 && s.active <= 2) state.active = s.active | 0;
+      } else {
+        // prenos datuma iz stare verzije aplikacije
+        var old = localStorage.getItem(OLD_KEY);
+        if (isDate(old)) state.jenters[0].date = old;
+      }
+    } catch (e) { /* spremanje nije dostupno, koriste se zadane vrijednosti */ }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function jobFor(t) {
+    var idx = ((Math.round((t - parse(state.shift.ref)) / DAY_MS) % 4) + 4) % 4;
+    return state.shift.order[idx];
+  }
+  function badge(job) { return '<span class="badge b-' + job + '">' + job + "</span>"; }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function renderTabs() {
+    $("tabs").innerHTML = state.jenters.map(function (j, i) {
+      return '<button class="tab" role="tab" data-i="' + i + '" aria-selected="' + (i === state.active) + '">' +
+             j.name.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</button>";
+    }).join("");
+  }
+
+  function renderToday() {
+    var t = parse(todayStr());
+    $("today").innerHTML = "Danas, " + fmt(t) + " (" + WEEKDAYS[new Date(t).getUTCDay()] + ") – smjena: " + badge(jobFor(t));
+  }
+
+  function renderRows() {
+    var cur = state.jenters[state.active];
+    $("start").value = cur.date;
+    var base = parse(cur.date), todayT = parse(todayStr()), html = "";
+    STEPS.forEach(function (s) {
+      var t = base + s.n * DAY_MS;
+      var wd = WEEKDAYS[new Date(t).getUTCDay()];
+      html += '<tr' + (t === todayT ? ' class="is-today"' : "") + ">" +
+        '<td class="c-day"><span class="day">' + s.n + ". dan</span></td>" +
+        '<td class="c-date date">' + fmt(t) + "<small>(" + wd + ")</small></td>" +
+        '<td class="c-act act">' + s.act + "</td>" +
+        '<td class="c-desc desc">' + s.desc + "</td>" +
+        '<td class="c-job">' + badge(jobFor(t)) + "</td></tr>";
+    });
+    $("rows").innerHTML = html;
+  }
+
+  function renderPreview() {
+    var t0 = parse(todayStr()), html = "";
+    for (var i = 0; i < 12; i++) {
+      var t = t0 + i * DAY_MS, d = new Date(t);
+      html += "<div>" + badge(jobFor(t)) + pad(d.getUTCDate()) + "." + pad(d.getUTCMonth() + 1) + ".</div>";
+    }
+    $("preview").innerHTML = html;
+  }
+
+  function renderSettings() {
+    $("nameFields").innerHTML = state.jenters.map(function (j, i) {
+      return '<label class="field"><span>Jenter ' + (i + 1) + '</span><input type="text" maxlength="20" data-name="' + i + '"></label>';
+    }).join("");
+    $("nameFields").querySelectorAll("input").forEach(function (inp) {
+      inp.value = state.jenters[+inp.getAttribute("data-name")].name;
+    });
+    var opts = ALL_SHIFTS.map(function (s) { return '<option value="' + s + '">' + s + "</option>"; }).join("");
+    $("refShift").innerHTML = opts;
+    $("refShift").value = state.shift.order[0];
+    $("refDate").value = state.shift.ref;
+    $("orderFields").innerHTML = [1, 2, 3].map(function (n) {
+      return '<label class="field"><span>Nakon ' + n + ". dan(a)</span><select data-order='" + n + "'>" + opts + "</select></label>";
+    }).join("");
+    $("orderFields").querySelectorAll("select").forEach(function (sel) {
+      sel.value = state.shift.order[+sel.getAttribute("data-order")];
+    });
+    renderPreview();
+  }
+
+  function renderAll() { renderTabs(); renderToday(); renderRows(); }
+
+  // događaji
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab");
+    if (!b) return;
+    state.active = +b.getAttribute("data-i");
+    save(); renderTabs(); renderRows();
+  });
+  $("start").addEventListener("input", function (e) {
+    if (!isDate(e.target.value)) return;
+    state.jenters[state.active].date = e.target.value;
+    save(); renderRows();
+  });
+  $("gear").addEventListener("click", function () {
+    var s = $("settings"), open = s.hidden;
+    s.hidden = !open;
+    $("gear").setAttribute("aria-expanded", String(open));
+    if (open) { renderSettings(); s.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  });
+  $("closeSettings").addEventListener("click", function () {
+    $("settings").hidden = true;
+    $("gear").setAttribute("aria-expanded", "false");
+  });
+  $("nameFields").addEventListener("input", function (e) {
+    var i = e.target.getAttribute("data-name");
+    if (i === null) return;
+    var v = e.target.value.trim();
+    state.jenters[+i].name = v || ("Jenter-" + (+i + 1));
+    save(); renderTabs();
+  });
+
+  function shiftChanged() {
+    var order = [$("refShift").value];
+    $("orderFields").querySelectorAll("select").forEach(function (sel) {
+      order[+sel.getAttribute("data-order")] = sel.value;
+    });
+    if (isDate($("refDate").value)) state.shift.ref = $("refDate").value;
+    state.shift.order = order;
+    save(); renderToday(); renderRows(); renderPreview();
+  }
+  $("refDate").addEventListener("input", shiftChanged);
+  $("refShift").addEventListener("change", shiftChanged);
+  $("orderFields").addEventListener("change", shiftChanged);
+  $("resetShifts").addEventListener("click", function () {
+    state.shift = defaults().shift;
+    save(); renderSettings(); renderToday(); renderRows();
+  });
+
+  load();
+  renderAll();
+
+  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
