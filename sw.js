@@ -1,6 +1,6 @@
 // Jednostavan service worker: aplikacija radi i bez interneta.
 // Kad mijenjate bilo koji fajl, povećajte broj verzije ispod.
-var CACHE = "jenter-planer-v2";
+var CACHE = "jenter-planer-v3";
 var FILES = [
   "./", "index.html", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
